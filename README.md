@@ -1,70 +1,52 @@
-# NYC-Data
-analyzing publicly available data on film permits in New York City
-NYC Film Permit Data Analysis
-Project Overview
-This project analyzes publicly available film permit data from New York City to identify trends and insights related to event types and their durations. The analysis leverages Python libraries such as Pandas, Matplotlib, and Seaborn to clean, process, and visualize the data.
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-Data Source
-The dataset is obtained from the official NYC Open Data portal:
-NYC Film Permit Data
+# Load the data
+data_url = "https://data.cityofnewyork.us/resource/tg4x-b46p.csv"
+film_permits = pd.read_csv(data_url)
 
-Features
-Data Cleaning: Handles missing values and converts date columns to datetime format.
+# Display basic info and preview
+print("Data Summary:")
+print(film_permits.info())
+print(film_permits.head())
 
-Data Analysis:
+# Data Cleaning: Drop rows with missing values in critical columns
+film_permits = film_permits.dropna(subset=['EventType', 'StartDateTime', 'EndDateTime'])
 
-Identifies the top 10 most common event types.
+# Convert date columns to datetime format
+film_permits['StartDateTime'] = pd.to_datetime(film_permits['StartDateTime'])
+film_permits['EndDateTime'] = pd.to_datetime(film_permits['EndDateTime'])
 
-Calculates the average duration of each event type.
+# Add a duration column (in hours)
+film_permits['DurationHours'] = (film_permits['EndDateTime'] - film_permits['StartDateTime']).dt.total_seconds() / 3600
 
-Data Visualization:
+# Analysis: Top 10 most common event types
+top_events = film_permits['EventType'].value_counts().head(10)
+print("\nTop 10 Event Types:")
+print(top_events)
 
-Bar plots of the most common event types.
+# Plotting: Top 10 Event Types
+plt.figure(figsize=(10, 6))
+sns.barplot(x=top_events.values, y=top_events.index, palette='viridis')
+plt.title('Top 10 Most Common NYC Film Permit Event Types')
+plt.xlabel('Number of Permits')
+plt.ylabel('Event Type')
+plt.show()
 
-Bar plots of the average duration for each event type.
+# Analysis: Average duration by event type
+avg_duration = film_permits.groupby('EventType')['DurationHours'].mean().sort_values(ascending=False).head(10)
+print("\nAverage Duration of Top 10 Event Types (in hours):")
+print(avg_duration)
 
-Data Export: Saves the cleaned dataset to a CSV file.
+# Plotting: Average Duration of Event Types
+plt.figure(figsize=(10, 6))
+sns.barplot(x=avg_duration.values, y=avg_duration.index, palette='plasma')
+plt.title('Average Duration of Top 10 Event Types (in hours)')
+plt.xlabel('Average Duration (hours)')
+plt.ylabel('Event Type')
+plt.show()
 
-Installation
-Clone the repository and install the required packages:
-
-bash
-Copy
-Edit
-git clone https://github.com/yourusername/nyc-film-permit-analysis.git
-cd nyc-film-permit-analysis
-pip install pandas matplotlib seaborn
-Usage
-Run the analysis script:
-
-bash
-Copy
-Edit
-python analysis.py
-Results
-The analysis provides insights into the distribution of event types and their average durations. Visualizations make it easier to understand the most common events and their time requirements.
-
-Example Output
-Top 10 Most Common Event Types:
-
-Displays the most frequent types of film permits.
-
-Average Duration of Event Types:
-
-Highlights the average time each event type takes.
-
-Visualizations:
-
-Bar plots showcasing the distribution and average duration.
-
-Cleaned Data
-The cleaned dataset is saved as cleaned_film_permits.csv in the project directory.
-
-Technologies Used
-Python
-
-Pandas
-
-Matplotlib
-
-Seaborn
+# Save cleaned data to a CSV file
+film_permits.to_csv('cleaned_film_permits.csv', index=False)
+print("\nCleaned data saved as 'cleaned_film_permits.csv'")
